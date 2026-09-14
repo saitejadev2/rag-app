@@ -1,0 +1,18 @@
+FastAPI is a modern web framework for building APIs with Python.
+
+FastAPI is built on top of Starlette for web functionality and Pydantic
+for data validation.
+
+FastAPI provides automatic interactive API documentation using OpenAPI
+and JSON Schema.
+
+FastAPI applications can define endpoints using decorators such as
+@app.get(), @app.post(), @app.put(), and @app.delete().
+
+Authentication is an important part of API development. FastAPI supports
+security mechanisms such as OAuth2 and API keys.
+
+Docker can be used to package a FastAPI application together with its
+dependencies.
+
+PostgreSQL is commonly used as a database for FastAPI applications.

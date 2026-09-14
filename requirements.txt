@@ -1,4 +1,5 @@
 openai 
 python-dotenv 
 sentence-transformers 
-faiss-cpu
+chromadb
+pypdf
