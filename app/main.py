@@ -1,53 +1,65 @@
 from pathlib import Path
 
 from ingestion.embedder import Embedder
-
 from retrieval.vector_store import VectorStore
 from retrieval.retriever import Retriever
-
 from generation.generator import Generator
-
 from rag.pipeline import RAGPipeline
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 CHROMA_DIR = BASE_DIR / "data" / "chroma"
 
 
-# -------------------------
-# Load existing components
-# -------------------------
+def main():
 
-embedder = Embedder()
+    # Load embedding model
+    embedder = Embedder()
 
-vector_store = VectorStore(
-    persist_directory=str(CHROMA_DIR)
-)
+    # Connect to existing vector database
+    vector_store = VectorStore(
+        persist_directory=str(CHROMA_DIR)
+    )
 
-retriever = Retriever(
-    vector_store=vector_store,
-    embedder=embedder
-)
+    # Create retriever
+    retriever = Retriever(
+        vector_store=vector_store,
+        embedder=embedder
+    )
 
-generator = Generator()
+    # Create generator
+    generator = Generator()
 
-rag = RAGPipeline(
-    retriever=retriever,
-    generator=generator
-)
+    # Create RAG pipeline
+    rag = RAGPipeline(
+        retriever=retriever,
+        generator=generator
+    )
+
+    # Ask question
+    question = input("\nAsk a question: ")
+
+    result = rag.query(
+        question,
+        k=3
+    )
+
+    # Print answer
+    print("\n================ ANSWER ================\n")
+    print(result["answer"])
+
+    # Print sources
+    print("\n================ SOURCES ================\n")
+
+    for source in result["sources"]:
+        filename = source.get("source", "Unknown")
+        page = source.get("page")
+
+        if page:
+            print(f"- {filename}, page {page}")
+        else:
+            print(f"- {filename}")
 
 
-# -------------------------
-# Ask question
-# -------------------------
-
-question = input("\nAsk a question: ")
-
-answer = rag.query(
-    question,
-    k=3
-)
-
-print("\nAnswer:")
-print(answer)
+if __name__ == "__main__":
+    main()

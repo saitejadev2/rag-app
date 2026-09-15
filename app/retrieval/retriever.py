@@ -3,12 +3,7 @@ from retrieval.vector_store import VectorStore
 
 
 class Retriever:
-
-    def __init__(
-        self,
-        vector_store: VectorStore,
-        embedder: Embedder
-    ):
+    def __init__(self, vector_store: VectorStore, embedder: Embedder):
         self.vector_store = vector_store
         self.embedder = embedder
 
@@ -25,19 +20,25 @@ class Retriever:
             k=k
         )
 
+        documents = results["documents"][0]
+        metadatas = results["metadatas"][0]
+        distances = results["distances"][0]
+
+        # If no threshold is provided,
+        # return all top-k results.
         if max_distance is None:
             return results
 
+        # Keep only sufficiently similar chunks
         filtered_documents = []
         filtered_metadatas = []
         filtered_distances = []
 
         for document, metadata, distance in zip(
-            results["documents"][0],
-            results["metadatas"][0],
-            results["distances"][0]
+            documents,
+            metadatas,
+            distances
         ):
-
             if distance <= max_distance:
                 filtered_documents.append(document)
                 filtered_metadatas.append(metadata)

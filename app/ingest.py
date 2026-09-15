@@ -28,6 +28,7 @@ def ingest_documents():
 
     for file_path in files:
         print(f"\nProcessing: {file_path.name}")
+        vector_store.delete_by_source(file_path.name)
 
         # 1. Load the document
         documents = load_document(str(file_path))

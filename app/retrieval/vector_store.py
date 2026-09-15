@@ -2,11 +2,7 @@ import chromadb
 
 
 class VectorStore:
-
-    def __init__(
-        self,
-        persist_directory: str = "data/chroma"
-    ):
+    def __init__(self, persist_directory: str = "data/chroma"):
         self.client = chromadb.PersistentClient(
             path=persist_directory
         )
@@ -21,10 +17,18 @@ class VectorStore:
         embeddings,
         metadatas: list[dict]
     ):
-        ids = [
-            f"{metadata['source']}-{metadata['chunk_id']}"
-            for metadata in metadatas
-        ]
+        ids = []
+
+        for metadata in metadatas:
+            source = metadata["source"]
+            page = metadata.get("page", "na")
+            chunk_id = metadata["chunk_id"]
+
+            chunk_id_string = (
+                f"{source}-page-{page}-chunk-{chunk_id}"
+            )
+
+            ids.append(chunk_id_string)
 
         self.collection.upsert(
             ids=ids,
@@ -33,11 +37,14 @@ class VectorStore:
             metadatas=metadatas
         )
 
-    def search(
-        self,
-        query_embedding,
-        k: int = 3
-    ):
+    def delete_by_source(self, source: str):
+        self.collection.delete(
+            where={
+                "source": source
+            }
+        )
+
+    def search(self, query_embedding, k: int = 3):
         results = self.collection.query(
             query_embeddings=[query_embedding.tolist()],
             n_results=k
