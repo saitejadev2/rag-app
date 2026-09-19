@@ -1,5 +1,5 @@
-from retrieval.retriever import Retriever
-from generation.generator import Generator
+from app.retrieval.retriever import Retriever
+from app.generation.generator import Generator
 
 
 class RAGPipeline:

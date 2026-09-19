@@ -54,3 +54,16 @@ class VectorStore:
 
     def size(self):
         return self.collection.count()
+
+    def get_sources(self):
+        results = self.collection.get(
+            include=["metadatas"]
+        )
+
+        sources = set()
+
+        for metadata in results["metadatas"]:
+            if metadata and "source" in metadata:
+                sources.add(metadata["source"])
+
+        return sorted(sources)

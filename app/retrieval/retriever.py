@@ -1,5 +1,5 @@
-from ingestion.embedder import Embedder
-from retrieval.vector_store import VectorStore
+from app.ingestion.embedder import Embedder
+from app.retrieval.vector_store import VectorStore
 
 
 class Retriever:

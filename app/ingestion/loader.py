@@ -2,7 +2,7 @@ from pathlib import Path
 
 from pypdf import PdfReader
 
-from ingestion.models import Document
+from app.ingestion.models import Document
 
 
 def load_txt(file_path: str) -> list[Document]:

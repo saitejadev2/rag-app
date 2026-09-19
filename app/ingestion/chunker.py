@@ -1,4 +1,4 @@
-from ingestion.models import Document
+from app.ingestion.models import Document
 
 
 def chunk_documents(

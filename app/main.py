@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from ingestion.embedder import Embedder
-from retrieval.vector_store import VectorStore
-from retrieval.retriever import Retriever
-from generation.generator import Generator
-from rag.pipeline import RAGPipeline
+from app.ingestion.embedder import Embedder
+from app.retrieval.vector_store import VectorStore
+from app.retrieval.retriever import Retriever
+from app.generation.generator import Generator
+from app.rag.pipeline import RAGPipeline
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
