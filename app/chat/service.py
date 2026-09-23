@@ -48,7 +48,9 @@ class ChatService:
         # Run normal RAG using standalone question
         result = self.rag_pipeline.query(
             standalone_question,
-            k=k
+            k=k,
+            conversation_id=conversation_id
+            
         )
 
         answer = result["answer"]

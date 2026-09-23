@@ -44,13 +44,23 @@ class VectorStore:
             }
         )
 
-    def search(self, query_embedding, k: int = 3):
-        results = self.collection.query(
-            query_embeddings=[query_embedding.tolist()],
-            n_results=k
-        )
+    def search(
+    self,
+    query_embedding,
+    k: int = 3,
+    conversation_id: str | None = None
+):
+        query_kwargs = {
+            "query_embeddings": [query_embedding.tolist()],
+            "n_results": k
+        }
 
-        return results
+        if conversation_id is not None:
+            query_kwargs["where"] = {
+                "conversation_id": conversation_id
+            }
+
+        return self.collection.query(**query_kwargs)
 
     def size(self):
         return self.collection.count()

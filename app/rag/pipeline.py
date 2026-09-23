@@ -7,22 +7,46 @@ class RAGPipeline:
         self.retriever = retriever
         self.generator = generator
 
-    def query(self, question: str, k: int = 3):
-        # Retrieve relevant chunks
+    def query(
+    self,
+    question: str,
+    k: int = 3,
+    conversation_id: str | None = None,
+    max_distance: float | None = None
+):
         results = self.retriever.retrieve(
             question,
-            k=k
+            k=k,
+            max_distance=max_distance,
+            conversation_id=conversation_id
         )
 
         documents = results["documents"][0]
         metadatas = results["metadatas"][0]
 
-        # Build context for the LLM
+        # No relevant documents were retrieved
+        if not documents:
+            return {
+                "answer": (
+                    "I don't have enough information in "
+                    "the documents for this conversation "
+                    "to answer that question."
+                ),
+                "sources": []
+            }
+
+        # Build context
         context_parts = []
 
-        for document, metadata in zip(documents, metadatas):
+        for document, metadata in zip(
+            documents,
+            metadatas
+        ):
+            source = metadata.get(
+                "source",
+                "Unknown"
+            )
 
-            source = metadata.get("source", "Unknown")
             page = metadata.get("page")
 
             if page is not None:
@@ -45,5 +69,14 @@ class RAGPipeline:
 
         return {
             "answer": answer,
-            "sources": metadatas
+            "sources": [
+                {
+                    **metadata,
+                    "distance": distance
+                }
+                for metadata, distance in zip(
+                    metadatas,
+                    results["distances"][0]
+                )
+            ]
         }

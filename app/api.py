@@ -8,6 +8,7 @@ import shutil
 from app.ingestion.service import IngestionService
 from app.chat.service import ChatService
 from app.ingestion.embedder import Embedder
+from app.retrieval.reranker import Reranker
 from app.retrieval.vector_store import VectorStore
 from app.retrieval.retriever import Retriever
 from app.generation.generator import Generator
@@ -34,10 +35,11 @@ embedder = Embedder()
 vector_store = VectorStore(
     persist_directory=str(CHROMA_DIR)
 )
-
+reranker = Reranker()
 retriever = Retriever(
     vector_store=vector_store,
-    embedder=embedder
+    embedder=embedder,
+    reranker=reranker
 )
 
 generator = Generator()
@@ -90,7 +92,9 @@ def health():
     }
 
 @app.post("/documents/upload")
+@app.post("/documents/upload")
 def upload_document(
+    conversation_id: str,
     file: UploadFile = File(...)
 ):
 
@@ -118,7 +122,8 @@ def upload_document(
             )
 
         result = ingestion_service.ingest_file(
-            file_path
+            file_path,
+            conversation_id=conversation_id
         )
 
         return {

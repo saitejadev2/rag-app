@@ -21,7 +21,8 @@ class IngestionService:
             persist_directory=str(chroma_dir)
         )
 
-    def ingest_file(self, file_path: Path):
+    def ingest_file(
+    self, file_path: Path, conversation_id: str | None = None):
 
         print(f"Processing: {file_path.name}")
 
@@ -41,6 +42,9 @@ class IngestionService:
             chunk_size=500,
             chunk_overlap=50
         )
+        for chunk in chunks:
+            if conversation_id is not None:
+                chunk.metadata["conversation_id"] = conversation_id
 
         if not chunks:
             raise ValueError(
