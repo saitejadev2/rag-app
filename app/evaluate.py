@@ -35,7 +35,22 @@ def main():
         )
 
         print(
-            f"Expected: {result['expected_source']}"
+            f"Expected answer: "
+            f"{result['expected_answer']}"
+        )
+
+        print(
+            f"Generated answer: "
+            f"{result['generated_answer']}"
+        )
+        print(
+            f"Answer correct: "
+            f"{result['answer_correct']}"
+        )
+
+        print(
+            f"Reason: "
+            f"{result['answer_reason']}"
         )
 
         print(

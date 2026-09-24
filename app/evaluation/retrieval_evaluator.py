@@ -6,6 +6,11 @@ from app.retrieval.vector_store import VectorStore
 from app.retrieval.retriever import Retriever
 from app.retrieval.reranker import Reranker
 
+from app.generation.generator import Generator
+from app.rag.pipeline import RAGPipeline
+
+from app.evaluation.answer_evaluator import AnswerEvaluator
+
 class RetrievalEvaluator:
 
     def __init__(self, chroma_dir: str = "data/chroma"):
@@ -22,6 +27,14 @@ class RetrievalEvaluator:
             embedder=self.embedder,
             reranker=self.reranker
         )
+
+        self.generator = Generator()
+
+        self.rag_pipeline = RAGPipeline(
+            retriever=self.retriever,
+            generator=self.generator
+        )
+        self.answer_evaluator = AnswerEvaluator()
 
     def evaluate(
         self,
@@ -40,7 +53,20 @@ class RetrievalEvaluator:
         for item in questions:
 
             question = item["question"]
+            expected_answer = item["expected_answer"]
             expected_source = item["expected_source"]
+            rag_result = self.rag_pipeline.query(
+                question=question,
+                k=3,
+                conversation_id=conversation_id
+            )
+
+            generated_answer = rag_result["answer"]
+            answer_evaluation = self.answer_evaluator.evaluate(
+                question=question,
+                expected_answer=expected_answer,
+                generated_answer=generated_answer
+            )
 
             retrieved = self.retriever.retrieve(
                 query=question,
@@ -79,10 +105,14 @@ class RetrievalEvaluator:
             # Calculate Hit@K
             question_result = {
                 "question": question,
+                "expected_answer": expected_answer,
+                "generated_answer": generated_answer,
                 "expected_source": expected_source,
                 "retrieved_sources": sources,
                 "distances": distances,
-                "reranker_scores": reranker_scores
+                "reranker_scores": reranker_scores,
+                "answer_correct": answer_evaluation["correct"],
+                "answer_reason": answer_evaluation["reason"]
             }
 
             for k in k_values:

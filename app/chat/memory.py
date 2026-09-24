@@ -1,12 +1,17 @@
+from app.chat.database import ChatDatabase
+
+
 class ConversationMemory:
 
     def __init__(self):
-        self.conversations = {}
+        self.database = ChatDatabase()
 
-    def get_history(self, conversation_id: str):
-        return self.conversations.get(
-            conversation_id,
-            []
+    def get_history(
+        self,
+        conversation_id: str
+    ):
+        return self.database.get_messages(
+            conversation_id
         )
 
     def add_message(
@@ -15,12 +20,8 @@ class ConversationMemory:
         role: str,
         content: str
     ):
-        if conversation_id not in self.conversations:
-            self.conversations[conversation_id] = []
-
-        self.conversations[conversation_id].append(
-            {
-                "role": role,
-                "content": content
-            }
+        self.database.add_message(
+            conversation_id=conversation_id,
+            role=role,
+            content=content
         )
