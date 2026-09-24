@@ -23,9 +23,16 @@ class VectorStore:
             source = metadata["source"]
             page = metadata.get("page", "na")
             chunk_id = metadata["chunk_id"]
+            conversation_id = metadata.get(
+                "conversation_id",
+                "global"
+            )
 
             chunk_id_string = (
-                f"{source}-page-{page}-chunk-{chunk_id}"
+                f"{conversation_id}-"
+                f"{source}-"
+                f"page-{page}-"
+                f"chunk-{chunk_id}"
             )
 
             ids.append(chunk_id_string)
@@ -37,10 +44,23 @@ class VectorStore:
             metadatas=metadatas
         )
 
-    def delete_by_source(self, source: str):
+    def delete_by_source(
+        self,
+        source: str,
+        conversation_id: str | None = None
+    ):
+        if conversation_id is None:
+            self.collection.delete(
+                where={"source": source}
+            )
+            return
+
         self.collection.delete(
             where={
-                "source": source
+                "$and": [
+                    {"source": source},
+                    {"conversation_id": conversation_id}
+                ]
             }
         )
 

@@ -91,9 +91,9 @@ def health():
         "status": "ok"
     }
 
+
 @app.post("/documents/upload")
-@app.post("/documents/upload")
-def upload_document(
+async def upload_document(
     conversation_id: str,
     file: UploadFile = File(...)
 ):
@@ -111,7 +111,14 @@ def upload_document(
             detail="Only PDF and TXT files are supported."
         )
 
-    file_path = DOCUMENTS_DIR / file.filename
+    conversation_dir = DOCUMENTS_DIR / conversation_id
+    conversation_dir.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    filename = Path(file.filename).name
+    file_path = conversation_dir / filename
 
     try:
 
@@ -139,12 +146,35 @@ def upload_document(
         )
 
 @app.get("/documents")
-def list_documents():
+def list_documents(conversation_id: str):
+    results = vector_store.collection.get(
+        where={
+            "conversation_id": conversation_id
+        },
+        include=["metadatas"]
+    )
 
-    sources = ingestion_service.vector_store.get_sources()
+    documents = {}
+
+    for metadata in results["metadatas"]:
+        if not metadata:
+            continue
+
+        source = metadata.get("source")
+
+        if source not in documents:
+            documents[source] = {
+                "filename": source,
+                "conversation_id": metadata.get(
+                    "conversation_id"
+                ),
+                "chunks": 0
+            }
+
+        documents[source]["chunks"] += 1
 
     return {
-        "documents": sources
+        "documents": list(documents.values())
     }
 
 @app.post("/chat")
@@ -157,3 +187,46 @@ def chat(request: ChatRequest):
     )
 
     return result
+
+@app.delete("/documents/{filename}")
+def delete_document(
+    filename: str,
+    conversation_id: str
+):
+    vector_store.delete_by_source(
+        filename,
+        conversation_id=conversation_id
+    )
+
+    return {
+        "message": "Document deleted successfully",
+        "filename": filename,
+        "conversation_id": conversation_id
+    }
+
+@app.post("/documents/{filename}/reindex")
+def reindex_document(
+    filename: str,
+    conversation_id: str
+):
+    file_path = (
+        DOCUMENTS_DIR
+        / conversation_id
+        / Path(filename).name
+    )
+
+    if not file_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found"
+        )
+
+    result = ingestion_service.ingest_file(
+        file_path=file_path,
+        conversation_id=conversation_id
+    )
+
+    return {
+        "message": "Document reindexed successfully",
+        **result
+    }

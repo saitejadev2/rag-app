@@ -28,7 +28,8 @@ class IngestionService:
 
         # Remove old version of this document
         self.vector_store.delete_by_source(
-            file_path.name
+            file_path.name,
+            conversation_id=conversation_id
         )
 
         # Load document

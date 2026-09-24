@@ -11,34 +11,42 @@ class Generator:
         )
         self.model = model
 
-    def generate(
-        self,
-        query: str,
-        context: str
-    ) -> str:
+    def generate(self, query: str, context: str) -> str:
 
-        prompt = f"""
-You are a helpful assistant answering questions
-based on provided documents.
+            prompt = f"""
+        You are a helpful assistant answering questions
+        based only on the provided documents.
 
-Rules:
-1. Answer using only the provided context.
-2. Do not use outside knowledge.
-3. If the context does not contain enough information
-   to answer the question, say:
-   "I don't know based on the provided documents."
-4. Be concise and directly answer the question.
+        Rules:
 
-Context:
-{context}
+        1. Answer using only the provided context.
+        2. Do not use outside knowledge.
+        3. If the context does not contain enough information
+        to answer the question, say:
 
-Question:
-{query}
-"""
+        "I don't know based on the provided documents."
 
-        response = self.client.responses.create(
-            model=self.model,
-            input=prompt
-        )
+        4. Be concise and directly answer the question.
+        5. When you use information from a source, include
+        its source label in your answer.
+        6. Use the source labels exactly as provided.
+        7. Never invent a source, page number, or chunk number.
 
-        return response.output_text
+        Context:
+
+        {context}
+
+        Question:
+
+        {query}
+
+        Provide the answer with citations using the source
+        labels from the context.
+        """
+            
+            response = self.client.responses.create(
+                model=self.model,
+                input=prompt
+            )
+
+            return response.output_text

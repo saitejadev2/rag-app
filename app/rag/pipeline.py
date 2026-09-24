@@ -49,10 +49,18 @@ class RAGPipeline:
 
             page = metadata.get("page")
 
+            chunk_id = metadata.get("chunk_id")
+
             if page is not None:
-                source_info = f"{source}, page {page}"
+                source_info = (
+                    f"{source}, page {page}, "
+                    f"chunk {chunk_id}"
+                )
             else:
-                source_info = source
+                source_info = (
+                    f"{source}, "
+                    f"chunk {chunk_id}"
+                )
 
             context_parts.append(
                 f"[Source: {source_info}]\n"
@@ -67,16 +75,23 @@ class RAGPipeline:
             context=context
         )
 
+        reranker_scores = results.get(
+            "reranker_scores",
+            [[]]
+        )[0]
+
         return {
             "answer": answer,
             "sources": [
                 {
                     **metadata,
-                    "distance": distance
+                    "distance": distance,
+                    "reranker_score": reranker_score
                 }
-                for metadata, distance in zip(
+                for metadata, distance, reranker_score in zip(
                     metadatas,
-                    results["distances"][0]
+                    results["distances"][0],
+                    reranker_scores
                 )
             ]
         }
