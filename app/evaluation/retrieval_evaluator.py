@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 
 from app.ingestion.embedder import Embedder
 from app.retrieval.vector_store import VectorStore
@@ -10,6 +9,7 @@ from app.generation.generator import Generator
 from app.rag.pipeline import RAGPipeline
 
 from app.evaluation.answer_evaluator import AnswerEvaluator
+
 
 class RetrievalEvaluator:
 
@@ -34,6 +34,7 @@ class RetrievalEvaluator:
             retriever=self.retriever,
             generator=self.generator
         )
+
         self.answer_evaluator = AnswerEvaluator()
 
     def evaluate(
@@ -55,18 +56,14 @@ class RetrievalEvaluator:
             question = item["question"]
             expected_answer = item["expected_answer"]
             expected_source = item["expected_source"]
-            rag_result = self.rag_pipeline.query(
-                question=question,
-                k=3,
-                conversation_id=conversation_id
+            is_unanswerable = item.get(
+                "is_unanswerable",
+                False
             )
 
-            generated_answer = rag_result["answer"]
-            answer_evaluation = self.answer_evaluator.evaluate(
-                question=question,
-                expected_answer=expected_answer,
-                generated_answer=generated_answer
-            )
+            # -------------------------------------------------
+            # 1. Retrieve and rerank ONCE
+            # -------------------------------------------------
 
             retrieved = self.retriever.retrieve(
                 query=question,
@@ -76,6 +73,7 @@ class RetrievalEvaluator:
 
             metadatas = retrieved["metadatas"][0]
             distances = retrieved["distances"][0]
+
             reranker_scores = retrieved.get(
                 "reranker_scores",
                 [[]]
@@ -86,14 +84,25 @@ class RetrievalEvaluator:
                 for metadata in metadatas
             ]
 
-            # Print retrieval details
+            # -------------------------------------------------
+            # 2. Print retrieval details
+            # -------------------------------------------------
+
             print(f"\nQuestion: {question}")
             print(f"Expected source: {expected_source}")
 
             print("\nRetrieved chunks:")
 
-            for rank, (source, distance, reranker_score) in enumerate(
-                zip(sources, distances, reranker_scores),
+            for rank, (
+                source,
+                distance,
+                reranker_score
+            ) in enumerate(
+                zip(
+                    sources,
+                    distances,
+                    reranker_scores
+                ),
                 start=1
             ):
                 print(
@@ -102,7 +111,33 @@ class RetrievalEvaluator:
                     f"reranker_score={reranker_score:.4f})"
                 )
 
-            # Calculate Hit@K
+            # -------------------------------------------------
+            # 3. Generate answer using the SAME retrieval
+            # -------------------------------------------------
+
+            rag_result = self.rag_pipeline.query(
+                question=question,
+                k=3,
+                conversation_id=conversation_id,
+                retrieved=retrieved
+            )
+
+            generated_answer = rag_result["answer"]
+
+            # -------------------------------------------------
+            # 4. Evaluate generated answer
+            # -------------------------------------------------
+
+            answer_evaluation = self.answer_evaluator.evaluate(
+                question=question,
+                expected_answer=expected_answer,
+                generated_answer=generated_answer
+            )
+
+            # -------------------------------------------------
+            # 5. Store evaluation result
+            # -------------------------------------------------
+
             question_result = {
                 "question": question,
                 "expected_answer": expected_answer,
@@ -112,13 +147,20 @@ class RetrievalEvaluator:
                 "distances": distances,
                 "reranker_scores": reranker_scores,
                 "answer_correct": answer_evaluation["correct"],
-                "answer_reason": answer_evaluation["reason"]
+                "answer_reason": answer_evaluation["reason"],
+                "is_unanswerable": is_unanswerable
             }
 
-            for k in k_values:
-                question_result[f"hit@{k}"] = (
-                    expected_source in sources[:k]
-                )
+            # -------------------------------------------------
+            # 6. Calculate Hit@K
+            # -------------------------------------------------
+
+            if not is_unanswerable:
+
+                for k in k_values:
+                    question_result[f"hit@{k}"] = (
+                        expected_source in sources[:k]
+                    )
 
             results.append(question_result)
 
@@ -126,18 +168,24 @@ class RetrievalEvaluator:
 
     def print_results(self, results):
 
-        print("\n================ RESULTS ================")
+        print(
+            "\n================ RESULTS ================\n"
+        )
 
         for result in results:
 
-            print(f"\nQuestion: {result['question']}")
-
             print(
-                f"Expected: {result['expected_source']}"
+                f"Question: {result['question']}"
             )
 
             print(
-                f"Retrieved: {result['retrieved_sources']}"
+                f"Expected: "
+                f"{result['expected_source']}"
+            )
+
+            print(
+                f"Retrieved: "
+                f"{result['retrieved_sources']}"
             )
 
             print(
@@ -145,10 +193,32 @@ class RetrievalEvaluator:
                 f"{result['distances']}"
             )
 
-            for key in ["hit@1", "hit@3", "hit@5"]:
+            for key in [
+                "hit@1",
+                "hit@3",
+                "hit@5"
+            ]:
 
                 if key in result:
                     print(
                         f"{key.upper()}: "
                         f"{result[key]}"
                     )
+
+            print(
+                f"Answer correct: "
+                f"{result['answer_correct']}"
+            )
+
+            print(
+                f"Generated answer: "
+                f"{result['generated_answer']}"
+            )
+
+            if result["is_unanswerable"]:
+                print(
+                    "Retrieval metrics: "
+                    "N/A (unanswerable question)"
+                )
+
+            print()

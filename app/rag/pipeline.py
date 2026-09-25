@@ -3,26 +3,42 @@ from app.generation.generator import Generator
 
 
 class RAGPipeline:
-    def __init__(self, retriever: Retriever, generator: Generator):
+    def __init__(
+        self,
+        retriever: Retriever,
+        generator: Generator
+    ):
         self.retriever = retriever
         self.generator = generator
 
     def query(
-    self,
-    question: str,
-    k: int = 3,
-    conversation_id: str | None = None,
-    max_distance: float | None = None
-):
-        results = self.retriever.retrieve(
-            question,
-            k=k,
-            max_distance=max_distance,
-            conversation_id=conversation_id
-        )
+        self,
+        question: str,
+        k: int = 3,
+        conversation_id: str | None = None,
+        max_distance: float | None = None,
+        retrieved: dict | None = None
+    ):
+        # Use already retrieved results if provided.
+        # Otherwise perform retrieval normally.
+        if retrieved is None:
+            retrieved = self.retriever.retrieve(
+                query=question,
+                k=k,
+                max_distance=max_distance,
+                conversation_id=conversation_id
+            )
 
-        documents = results["documents"][0]
-        metadatas = results["metadatas"][0]
+        # Use only the top-k results for generation.
+        documents = retrieved["documents"][0][:k]
+        metadatas = retrieved["metadatas"][0][:k]
+
+        distances = retrieved["distances"][0][:k]
+
+        reranker_scores = retrieved.get(
+            "reranker_scores",
+            [[]]
+        )[0][:k]
 
         # No relevant documents were retrieved
         if not documents:
@@ -48,7 +64,6 @@ class RAGPipeline:
             )
 
             page = metadata.get("page")
-
             chunk_id = metadata.get("chunk_id")
 
             if page is not None:
@@ -75,11 +90,6 @@ class RAGPipeline:
             context=context
         )
 
-        reranker_scores = results.get(
-            "reranker_scores",
-            [[]]
-        )[0]
-
         return {
             "answer": answer,
             "sources": [
@@ -90,7 +100,7 @@ class RAGPipeline:
                 }
                 for metadata, distance, reranker_score in zip(
                     metadatas,
-                    results["distances"][0],
+                    distances,
                     reranker_scores
                 )
             ]
