@@ -9,7 +9,8 @@ from app.generation.generator import Generator
 from app.rag.pipeline import RAGPipeline
 
 from app.evaluation.answer_evaluator import AnswerEvaluator
-
+from app.evaluation.citation_evaluator import CitationEvaluator
+from app.evaluation.grounding_evaluator import GroundingEvaluator
 
 class RetrievalEvaluator:
 
@@ -36,7 +37,8 @@ class RetrievalEvaluator:
         )
 
         self.answer_evaluator = AnswerEvaluator()
-
+        self.citation_evaluator = CitationEvaluator()
+        self.grounding_evaluator = GroundingEvaluator()
     def evaluate(
         self,
         questions_file: str,
@@ -123,6 +125,62 @@ class RetrievalEvaluator:
             )
 
             generated_answer = rag_result["answer"]
+            citation_evaluation = self.citation_evaluator.evaluate(
+                answer=generated_answer,
+                retrieved_sources=rag_result["sources"]
+            )
+            cited_chunks = []
+
+            for citation in citation_evaluation["citations"]:
+
+                if not citation["valid"]:
+                    continue
+
+                for document, metadata in zip(
+                    retrieved["documents"][0],
+                    retrieved["metadatas"][0]
+                ):
+
+                    same_source = (
+                        citation["source"]
+                        == metadata.get("source")
+                    )
+
+                    same_chunk = (
+                        citation["chunk_id"]
+                        == metadata.get("chunk_id")
+                    )
+
+                    if "page" in citation:
+                        same_page = (
+                            citation["page"]
+                            == metadata.get("page")
+                        )
+                    else:
+                        same_page = True
+
+                    if (
+                        same_source
+                        and same_chunk
+                        and same_page
+                    ):
+                        cited_chunks.append(
+                            {
+                                **metadata,
+                                "text": document
+                            }
+                        )
+
+                        break
+
+
+            grounding_evaluation = (
+                self.grounding_evaluator.evaluate(
+                    question=question,
+                    answer=generated_answer,
+                    cited_chunks=cited_chunks
+                )
+            )
 
             # -------------------------------------------------
             # 4. Evaluate generated answer
@@ -142,15 +200,27 @@ class RetrievalEvaluator:
                 "question": question,
                 "expected_answer": expected_answer,
                 "generated_answer": generated_answer,
+                "sources": rag_result["sources"],
                 "expected_source": expected_source,
                 "retrieved_sources": sources,
                 "distances": distances,
                 "reranker_scores": reranker_scores,
+
                 "answer_correct": answer_evaluation["correct"],
                 "answer_reason": answer_evaluation["reason"],
+
+                "citations": citation_evaluation["citations"],
+                "citation_count": citation_evaluation["citation_count"],
+                "valid_citations": citation_evaluation["valid_citations"],
+                "invalid_citations": citation_evaluation["invalid_citations"],
+                "citation_precision": citation_evaluation["citation_precision"],
+                "has_citation": citation_evaluation["has_citation"],
+
+                "grounded": grounding_evaluation["grounded"],
+                "grounding_reason": grounding_evaluation["reason"],
+
                 "is_unanswerable": is_unanswerable
             }
-
             # -------------------------------------------------
             # 6. Calculate Hit@K
             # -------------------------------------------------
