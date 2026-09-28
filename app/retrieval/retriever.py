@@ -15,21 +15,20 @@ class Retriever:
         self.embedder = embedder
         self.reranker = reranker
 
-    def retrieve(
+    def retrieve_candidates(
         self,
         query: str,
-        k: int = 3,
+        candidate_k: int = 10,
         max_distance: float | None = None,
         conversation_id: str | None = None
     ):
-        # ------------------------------------------------
-        # Step 1: Vector search
-        # ------------------------------------------------
+        """
+        Stage 1:
+        Retrieve candidate documents using vector similarity.
+        No reranking happens here.
+        """
 
         query_embedding = self.embedder.embed_query(query)
-
-        # Retrieve more candidates than we ultimately need
-        candidate_k = max(k * 3, 10)
 
         results = self.vector_store.search(
             query_embedding,
@@ -41,54 +40,113 @@ class Retriever:
         metadatas = results["metadatas"][0]
         distances = results["distances"][0]
 
-        # ------------------------------------------------
-        # Step 2: Optional distance filtering
-        # ------------------------------------------------
-
         if max_distance is not None:
 
             filtered = [
                 (document, metadata, distance)
                 for document, metadata, distance
-                in zip(documents, metadatas, distances)
+                in zip(
+                    documents,
+                    metadatas,
+                    distances
+                )
                 if distance <= max_distance
             ]
 
-            documents = [item[0] for item in filtered]
-            metadatas = [item[1] for item in filtered]
-            distances = [item[2] for item in filtered]
+            documents = [
+                item[0]
+                for item in filtered
+            ]
+
+            metadatas = [
+                item[1]
+                for item in filtered
+            ]
+
+            distances = [
+                item[2]
+                for item in filtered
+            ]
+
+        return {
+            "documents": documents,
+            "metadatas": metadatas,
+            "distances": distances
+        }
+
+    def retrieve(
+        self,
+        query: str,
+        k: int = 3,
+        max_distance: float | None = None,
+        conversation_id: str | None = None
+    ):
+        """
+        Full retrieval pipeline:
+
+        Vector retrieval
+              ↓
+        Cross-encoder reranking
+              ↓
+        Top-k results
+        """
+
+        candidate_k = max(k * 3, 10)
+
+        candidates = self.retrieve_candidates(
+            query=query,
+            candidate_k=candidate_k,
+            max_distance=max_distance,
+            conversation_id=conversation_id
+        )
+
+        documents = candidates["documents"]
+        metadatas = candidates["metadatas"]
+        distances = candidates["distances"]
 
         if not documents:
+
             return {
                 "documents": [[]],
                 "metadatas": [[]],
-                "distances": [[]]
+                "distances": [[]],
+                "reranker_scores": [[]]
             }
 
-        # ------------------------------------------------
-        # Step 3: Reranking
-        # ------------------------------------------------
+        pairs = [
+            (query, document)
+            for document in documents
+        ]
 
-        reranked = self.reranker.rerank(
-            query=query,
-            documents=documents,
-            top_k=k
+        scores = self.reranker.model.predict(pairs)
+
+        ranked_indices = sorted(
+            range(len(documents)),
+            key=lambda index: scores[index],
+            reverse=True
         )
 
-        reranked_documents = []
-        reranked_metadatas = []
-        reranked_distances = []
-        reranked_scores = []
+        ranked_indices = ranked_indices[:k]
 
-        for document, reranker_score in reranked:
+        reranked_documents = [
+            documents[index]
+            for index in ranked_indices
+        ]
 
-            # Find the original chunk position
-            index = documents.index(document)
+        reranked_metadatas = [
+            metadatas[index]
+            for index in ranked_indices
+        ]
 
-            reranked_documents.append(document)
-            reranked_metadatas.append(metadatas[index])
-            reranked_distances.append(distances[index])
-            reranked_scores.append(float(reranker_score))
+        reranked_distances = [
+            distances[index]
+            for index in ranked_indices
+        ]
+
+        reranked_scores = [
+            float(scores[index])
+            for index in ranked_indices
+        ]
 
         return {
             "documents": [reranked_documents],
