@@ -1,0 +1,242 @@
+[
+    {
+        "question": "What characteristics of Python are mentioned in the document?",
+        "expected_answer": "Python is a high-level programming language known for its simple syntax and readability.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [0],
+        "category": "direct",
+        "is_unanswerable": false
+    },
+    {
+        "question": "Which technology is described as a modern framework for building APIs?",
+        "expected_answer": "FastAPI is described as a modern Python web framework used for building APIs.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [0],
+        "category": "paraphrased",
+        "is_unanswerable": false
+    },
+    {
+        "question": "According to the document, what does FastAPI provide for API documentation?",
+        "expected_answer": "FastAPI provides automatic interactive API documentation through OpenAPI and JSON Schema.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [0],
+        "category": "direct",
+        "is_unanswerable": false
+    },
+    {
+        "question": "An application needs to package itself together with its dependencies so it behaves consistently in different environments. Which technology described in the document is intended for this?",
+        "expected_answer": "Docker is used to package applications and their dependencies into containers, helping applications run consistently across different environments.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [0],
+        "category": "paraphrased",
+        "is_unanswerable": false
+    },
+    {
+        "question": "Why are containers useful according to the document?",
+        "expected_answer": "Containers help applications run consistently across different environments.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [1],
+        "category": "direct",
+        "is_unanswerable": false
+    },
+    {
+        "question": "Which technology is described as an in-memory data store, and what are its common uses?",
+        "expected_answer": "Redis is an in-memory data store commonly used for caching, session management, and real-time applications.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [1],
+        "category": "paraphrased",
+        "is_unanswerable": false
+    },
+    {
+        "question": "What kind of database system is PostgreSQL?",
+        "expected_answer": "PostgreSQL is an open-source relational database management system.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [1],
+        "category": "direct",
+        "is_unanswerable": false
+    },
+    {
+        "question": "How are vector databases different from PostgreSQL based on the descriptions in the document?",
+        "expected_answer": "PostgreSQL is described as an open-source relational database management system, while vector databases are designed to store and search high-dimensional vectors and are commonly used for semantic search and retrieval-augmented generation.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [1],
+        "category": "comparison",
+        "is_unanswerable": false
+    },
+    {
+        "question": "What are vector databases designed to store and search?",
+        "expected_answer": "Vector databases are designed to store and search high-dimensional vectors.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [1],
+        "category": "direct",
+        "is_unanswerable": false
+    },
+    {
+        "question": "What does RAG mean, and what happens in a RAG system before the language model generates an answer?",
+        "expected_answer": "RAG stands for Retrieval-Augmented Generation. A RAG system retrieves relevant information from a knowledge base and provides that information to a language model as context before generating an answer.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [2],
+        "category": "multi_concept",
+        "is_unanswerable": false
+    },
+    {
+        "question": "How are embeddings and vector databases related according to the document?",
+        "expected_answer": "Embeddings are numerical vector representations of text, while vector databases are designed to store and search high-dimensional vectors. Vector databases are commonly used in applications involving semantic search and retrieval-augmented generation.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [1, 2],
+        "category": "multi_concept",
+        "is_unanswerable": false
+    },
+    {
+        "question": "Suppose two pieces of text have similar meanings. What does the document say about the relationship between their embeddings?",
+        "expected_answer": "Semantically similar pieces of text tend to have similar vector representations.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [2],
+        "category": "reasoning",
+        "is_unanswerable": false
+    },
+    {
+        "question": "What does a cross-encoder reranker evaluate, and what does it produce?",
+        "expected_answer": "A cross-encoder reranker evaluates a query and candidate documents together and assigns a relevance score to each candidate.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [3],
+        "category": "paraphrased",
+        "is_unanswerable": false
+    },
+    {
+        "question": "Why can reranking improve the results returned by a retrieval system?",
+        "expected_answer": "Reranking can improve the ordering of retrieved results.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [3],
+        "category": "reasoning",
+        "is_unanswerable": false
+    },
+    {
+        "question": "What is chunking, and why is chunk overlap used?",
+        "expected_answer": "Chunking is the process of splitting large documents into smaller pieces before creating embeddings. Chunk overlap keeps some text from neighboring chunks so that important context is not lost at chunk boundaries.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [3],
+        "category": "multi_concept",
+        "is_unanswerable": false
+    },
+    {
+        "question": "A document needs to be divided into smaller pieces before embeddings are created. What process is being described?",
+        "expected_answer": "This process is called chunking.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [3],
+        "category": "paraphrased",
+        "is_unanswerable": false
+    },
+    {
+        "question": "What problem does chunk overlap help prevent?",
+        "expected_answer": "Chunk overlap helps prevent important context from being lost at chunk boundaries by keeping some text from neighboring chunks.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [3],
+        "category": "reasoning",
+        "is_unanswerable": false
+    },
+    {
+        "question": "Which two concepts in the document are directly involved in semantic search and retrieval-augmented generation?",
+        "expected_answer": "Vector databases and embeddings are the relevant concepts. Embeddings provide numerical vector representations of text, while vector databases store and search high-dimensional vectors and are commonly used for semantic search and RAG applications.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [1],
+        "category": "multi_concept",
+        "is_unanswerable": false
+    },
+    {
+        "question": "Compare Redis and PostgreSQL based only on how they are described in the document.",
+        "expected_answer": "Redis is described as an in-memory data store commonly used for caching, session management, and real-time applications. PostgreSQL is described as an open-source relational database management system that supports SQL and provides features such as transactions, indexing, and constraints.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [1],
+        "category": "comparison",
+        "is_unanswerable": false
+    },
+    {
+        "question": "How do RAG and vector databases relate to each other according to the document?",
+        "expected_answer": "RAG stands for Retrieval-Augmented Generation and involves retrieving relevant information from a knowledge base before generating an answer. Vector databases are commonly used in applications involving semantic search and retrieval-augmented generation.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [1],
+        "category": "multi_concept",
+        "is_unanswerable": false
+    },
+    {
+        "question": "What is the annual revenue of FastAPI?",
+        "expected_answer": "I don't know based on the provided documents.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [],
+        "category": "unanswerable",
+        "is_unanswerable": true
+    },
+    {
+        "question": "Which embedding model was used to create the vectors in this document?",
+        "expected_answer": "I don't know based on the provided documents.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [],
+        "category": "unanswerable",
+        "is_unanswerable": true
+    },
+    {
+        "question": "What is the maximum number of containers that Docker can run on a single machine?",
+        "expected_answer": "I don't know based on the provided documents.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [],
+        "category": "unanswerable",
+        "is_unanswerable": true
+    },
+    {
+        "question": "What programming language is Redis implemented in?",
+        "expected_answer": "I don't know based on the provided documents.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [],
+        "category": "unanswerable",
+        "is_unanswerable": true
+    },
+    {
+        "question": "What SQL indexing algorithm does PostgreSQL use according to the document?",
+        "expected_answer": "I don't know based on the provided documents.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [],
+        "category": "unanswerable",
+        "is_unanswerable": true
+    },
+    {
+        "question": "What embedding dimension is used for the text representations described in the document?",
+        "expected_answer": "I don't know based on the provided documents.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [],
+        "category": "unanswerable",
+        "is_unanswerable": true
+    },
+    {
+        "question": "Which company originally created FastAPI?",
+        "expected_answer": "I don't know based on the provided documents.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [],
+        "category": "unanswerable",
+        "is_unanswerable": true
+    },
+    {
+        "question": "What is the storage capacity of the vector database described in the document?",
+        "expected_answer": "I don't know based on the provided documents.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [],
+        "category": "unanswerable",
+        "is_unanswerable": true
+    },
+    {
+        "question": "What API documentation format does Docker provide?",
+        "expected_answer": "I don't know based on the provided documents.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [],
+        "category": "adversarial",
+        "is_unanswerable": true
+    },
+    {
+        "question": "Which SQL database does Redis use internally according to the document?",
+        "expected_answer": "I don't know based on the provided documents.",
+        "expected_source": "evaluation.txt",
+        "expected_chunks": [],
+        "category": "adversarial",
+        "is_unanswerable": true
+    }
+]

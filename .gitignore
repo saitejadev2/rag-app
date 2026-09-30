@@ -1,8 +1,25 @@
+# Virtual environment
 venv/
+
+# Environment variables / secrets
 .env
+.env.*
+
+# Python cache
 __pycache__/
 *.pyc
-test/
-test_*.py
-data/
+*.pyo
+
+# Test / coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local database
 data/chat.db
+
+# Local vector database
+data/chroma/
+
+# Uploaded/private documents
+data/documents/
