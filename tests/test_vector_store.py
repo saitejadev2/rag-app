@@ -1,81 +1,106 @@
-from pathlib import Path
+import numpy as np
 
-from ingestion.loader import load_document
-from ingestion.chunker import recursive_split
-from ingestion.embedder import Embedder
-from retrieval.vector_store import VectorStore
+from app.retrieval.vector_store import VectorStore
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+def test_conversation_isolation(tmp_path):
+    vector_store = VectorStore(
+        persist_directory=str(tmp_path / "chroma")
+    )
 
-file_path = BASE_DIR / "data" / "documents" / "fastapi.txt"
+    vector_store.add(
+        chunks=["Document belonging to conversation A"],
+        embeddings=np.array([[1.0, 0.0, 0.0]]),
+        metadatas=[
+            {
+                "source": "a.txt",
+                "chunk_id": 0,
+                "conversation_id": "conversation-A",
+            }
+        ],
+    )
+
+    vector_store.add(
+        chunks=["Document belonging to conversation B"],
+        embeddings=np.array([[0.0, 1.0, 0.0]]),
+        metadatas=[
+            {
+                "source": "b.txt",
+                "chunk_id": 0,
+                "conversation_id": "conversation-B",
+            }
+        ],
+    )
+
+    results_a = vector_store.search(
+        query_embedding=np.array([1.0, 0.0, 0.0]),
+        k=5,
+        conversation_id="conversation-A",
+    )
+
+    results_b = vector_store.search(
+        query_embedding=np.array([0.0, 1.0, 0.0]),
+        k=5,
+        conversation_id="conversation-B",
+    )
+
+    assert results_a["documents"][0] == [
+        "Document belonging to conversation A"
+    ]
+
+    assert results_b["documents"][0] == [
+        "Document belonging to conversation B"
+    ]
 
 
-# 1. Load document
-text = load_document(str(file_path))
+def test_delete_by_source_is_conversation_scoped(tmp_path):
+    vector_store = VectorStore(
+        persist_directory=str(tmp_path / "chroma")
+    )
 
+    vector_store.add(
+        chunks=["A's resume"],
+        embeddings=np.array([[1.0, 0.0, 0.0]]),
+        metadatas=[
+            {
+                "source": "resume.pdf",
+                "chunk_id": 0,
+                "conversation_id": "conversation-A",
+            }
+        ],
+    )
 
-# 2. Chunk document
-chunks = recursive_split(
-    text,
-    chunk_size=200,
-    chunk_overlap=50
-)
+    vector_store.add(
+        chunks=["B's resume"],
+        embeddings=np.array([[0.0, 1.0, 0.0]]),
+        metadatas=[
+            {
+                "source": "resume.pdf",
+                "chunk_id": 0,
+                "conversation_id": "conversation-B",
+            }
+        ],
+    )
 
-print("Number of chunks:", len(chunks))
+    vector_store.delete_by_source(
+        source="resume.pdf",
+        conversation_id="conversation-A",
+    )
 
+    results_a = vector_store.search(
+        query_embedding=np.array([1.0, 0.0, 0.0]),
+        k=5,
+        conversation_id="conversation-A",
+    )
 
-# 3. Generate embeddings
-embedder = Embedder()
+    results_b = vector_store.search(
+        query_embedding=np.array([0.0, 1.0, 0.0]),
+        k=5,
+        conversation_id="conversation-B",
+    )
 
-embeddings = embedder.embed_documents(chunks)
+    assert results_a["documents"][0] == []
 
-print("Embedding shape:", embeddings.shape)
-
-
-# 4. Create vector store
-store = VectorStore(
-    persist_directory=str(BASE_DIR / "data" / "chroma")
-)
-
-
-# 5. Create metadata
-metadatas = [
-    {
-        "source": file_path.name,
-        "chunk_id": i
-    }
-    for i in range(len(chunks))
-]
-
-
-# 6. Store everything
-store.add(
-    chunks=chunks,
-    embeddings=embeddings,
-    metadatas=metadatas
-)
-
-print("Vectors stored:", store.size())
-
-query = "How does FastAPI handle authentication?"
-
-query_embedding = embedder.embed_query(query)
-
-results = store.search(
-    query_embedding,
-    k=3
-)
-
-print("\nRETRIEVED RESULTS")
-print("=" * 50)
-
-for document, metadata in zip(
-    results["documents"][0],
-    results["metadatas"][0]
-):
-    print("\nDocument:")
-    print(document)
-
-    print("Metadata:")
-    print(metadata)
+    assert results_b["documents"][0] == [
+        "B's resume"
+    ]

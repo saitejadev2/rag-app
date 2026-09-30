@@ -1,36 +1,33 @@
 from pathlib import Path
 
-from ingestion.loader import load_document
+from app.ingestion.loader import load_document
+from app.ingestion.models import Document
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-file_path = (
-    BASE_DIR
-    / "data"
-    / "documents"
-    / "sample.pdf"
-)
-
-
-documents = load_document(
-    str(file_path)
-)
-
-print(
-    f"Loaded {len(documents)} page(s)"
-)
-
-for document in documents:
-
-    print("\n--------------------")
-
-    print(
-        "Metadata:",
-        document.metadata
+def test_load_txt(tmp_path: Path):
+    file_path = tmp_path / "sample.txt"
+    file_path.write_text(
+        "This is a test document.",
+        encoding="utf-8"
     )
 
-    print(
-        "Text:",
-        document.text[:300]
+    documents = load_document(str(file_path))
+
+    assert len(documents) == 1
+    assert isinstance(documents[0], Document)
+    assert documents[0].text == "This is a test document."
+    assert documents[0].metadata["source"] == "sample.txt"
+
+
+def test_unsupported_file_type(tmp_path: Path):
+    file_path = tmp_path / "sample.docx"
+    file_path.write_text(
+        "test",
+        encoding="utf-8"
     )
+
+    try:
+        load_document(str(file_path))
+        assert False, "Expected ValueError"
+    except ValueError as error:
+        assert "Unsupported file type" in str(error)

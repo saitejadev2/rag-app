@@ -1,22 +1,42 @@
-from pathlib import Path
-
-from ingestion.loader import load_document
-from ingestion.chunker import recursive_split
+from app.ingestion.chunker import chunk_documents
+from app.ingestion.models import Document
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+def test_chunk_documents_preserves_text_and_metadata():
+    document = Document(
+        text="A" * 1200,
+        metadata={"source": "test.txt"}
+    )
 
-file_path = BASE_DIR / "data" / "documents" / "fastapi.txt"
+    chunks = chunk_documents(
+        [document],
+        chunk_size=500,
+        chunk_overlap=50
+    )
 
-text = load_document(str(file_path))
+    assert len(chunks) > 1
 
-chunks = recursive_split(
-    text,
-    chunk_size=200,
-    chunk_overlap=50
-)
+    for chunk in chunks:
+        assert chunk.text
+        assert chunk.metadata["source"] == "test.txt"
+        assert "chunk_id" in chunk.metadata
 
-for i, chunk in enumerate(chunks):
-    print(f"\n--- CHUNK {i} ---")
-    print(chunk)
-    print(f"Length: {len(chunk)}")
+
+def test_chunk_ids_are_sequential():
+    document = Document(
+        text="This is a test document. " * 100,
+        metadata={"source": "test.txt"}
+    )
+
+    chunks = chunk_documents(
+        [document],
+        chunk_size=100,
+        chunk_overlap=20
+    )
+
+    chunk_ids = [
+        chunk.metadata["chunk_id"]
+        for chunk in chunks
+    ]
+
+    assert chunk_ids == list(range(len(chunks)))

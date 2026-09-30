@@ -10,16 +10,15 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Test / coverage artifacts
+# Pytest
 .pytest_cache/
+.pytest_tmp/
+
+# Coverage
 .coverage
 htmlcov/
 
-# Local database
+# Runtime application data
 data/chat.db
-
-# Local vector database
 data/chroma/
-
-# Uploaded/private documents
 data/documents/

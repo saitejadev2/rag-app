@@ -1,0 +1,19 @@
+Python is a high-level programming language known for its simple syntax and readability.
+
+FastAPI is a modern Python web framework used for building APIs. It provides automatic interactive API documentation through OpenAPI and JSON Schema.
+
+Docker is a platform used to package applications and their dependencies into containers. Containers help applications run consistently across different environments.
+
+Redis is an in-memory data store commonly used for caching, session management, and real-time applications.
+
+PostgreSQL is an open-source relational database management system. It supports SQL and provides features such as transactions, indexing, and constraints.
+
+Vector databases are designed to store and search high-dimensional vectors. They are commonly used in applications involving semantic search and retrieval-augmented generation.
+
+RAG stands for Retrieval-Augmented Generation. A RAG system retrieves relevant information from a knowledge base and provides that information to a language model as context before generating an answer.
+
+Embeddings are numerical vector representations of text. Semantically similar pieces of text tend to have similar vector representations.
+
+A cross-encoder reranker evaluates a query and candidate documents together and assigns a relevance score to each candidate. Reranking can improve the ordering of retrieved results.
+
+Chunking is the process of splitting large documents into smaller pieces before creating embeddings. Chunk overlap keeps some text from neighboring chunks so that important context is not lost at chunk boundaries.

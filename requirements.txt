@@ -6,3 +6,4 @@ pypdf
 fastapi
 python-multipart
 uvicorn
+pytest
